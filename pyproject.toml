@@ -22,7 +22,7 @@ dev = [
 ]
 
 [project.scripts]
-cig-ts = "cig.cli:app"
+cig = "cig.cli:app"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -30,4 +30,3 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
-

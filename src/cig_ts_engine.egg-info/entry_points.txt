@@ -1,2 +1,2 @@
 [console_scripts]
-cig-ts = cig.cli:app
+cig = cig.cli:app
