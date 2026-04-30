@@ -26,9 +26,14 @@ class ThinkingSystemEngine:
         handles signed constraints, normalization, and attractor search.
         """
         deltas = {node_id: 0.0 for node_id in self.graph.nodes}
-        for edge in self.graph.edges.values():
+        for edge in self.graph.edges:
             source_activation = self.graph.node(edge.source).activation
-            deltas[edge.target] += source_activation * edge.weight * self.propagation_rate
+            deltas[edge.target] += (
+                source_activation
+                * edge.weight
+                * edge.polarity
+                * self.propagation_rate
+            )
 
         for node_id, delta in deltas.items():
             node = self.graph.node(node_id)
@@ -58,4 +63,3 @@ class ThinkingSystemEngine:
         report = self.detect_tension()
         self.evolve(report)
         return report
-

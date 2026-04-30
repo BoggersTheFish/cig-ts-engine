@@ -1,16 +1,17 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Edge(BaseModel):
-    """A weighted relation or constraint between two graph nodes."""
+    """A weighted relation or constraint between two CIG nodes."""
 
-    id: str
+    model_config = ConfigDict(extra="allow")
+
     source: str
     target: str
-    relation: str = "related"
-    weight: float = Field(default=1.0, ge=-1.0, le=1.0)
-    expected_target_activation: float | None = Field(default=None, ge=0.0, le=1.0)
-    metadata: dict[str, str | int | float | bool] = Field(default_factory=dict)
-
+    relation: str
+    weight: float = Field(default=1.0, ge=0.0)
+    polarity: float = Field(default=1.0, ge=-1.0, le=1.0)
+    expected_ratio: float = 1.0
+    metadata: dict = Field(default_factory=dict)

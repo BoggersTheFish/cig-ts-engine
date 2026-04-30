@@ -1,31 +1,24 @@
 from __future__ import annotations
 
-from enum import StrEnum
-
-from pydantic import BaseModel, Field
-
-
-class NodeKind(StrEnum):
-    """Supported TS node categories."""
-
-    CONCEPT = "concept"
-    CLAIM = "claim"
-    SYMBOL = "symbol"
-    MEMORY = "memory"
-    STATE = "state"
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class Node(BaseModel):
-    """A concept, claim, symbol, memory, or state in the graph."""
+    """A concept, claim, memory, symbol, or state in a CIG graph."""
+
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
 
     id: str
-    label: str | None = None
-    kind: NodeKind = NodeKind.CONCEPT
-    activation: float = Field(default=0.0, ge=0.0, le=1.0)
-    context: str | None = None
-    metadata: dict[str, str | int | float | bool] = Field(default_factory=dict)
+    label: str
+    activation: float = 0.0
+    stability: float = Field(default=1.0, gt=0.0)
+    metadata: dict = Field(default_factory=dict)
+
+    @field_validator("activation")
+    @classmethod
+    def clamp_activation(cls, value: float) -> float:
+        return max(0.0, min(1.0, float(value)))
 
     @property
     def display_label(self) -> str:
-        return self.label or self.id
-
+        return self.label

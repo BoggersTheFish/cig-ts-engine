@@ -6,7 +6,10 @@ from cig.graph import Graph
 
 
 class EdgeTension(BaseModel):
-    edge_id: str
+    edge_index: int
+    source: str
+    target: str
+    relation: str
     value: float = Field(ge=0.0)
 
 
@@ -20,22 +23,26 @@ class TensionReport(BaseModel):
         return 1.0 / (1.0 + self.total)
 
 
-def edge_tension(graph: Graph, edge_id: str) -> EdgeTension:
-    edge = graph.edge(edge_id)
-    if edge.expected_target_activation is None:
-        return EdgeTension(edge_id=edge.id, value=0.0)
-
+def edge_tension(graph: Graph, edge_index: int) -> EdgeTension:
+    edge = graph.edge(edge_index)
+    source_activation = graph.node(edge.source).activation
     target_activation = graph.node(edge.target).activation
-    value = abs(target_activation - edge.expected_target_activation) * abs(edge.weight)
-    return EdgeTension(edge_id=edge.id, value=float(value))
+    expected = edge.expected_ratio * source_activation * edge.polarity
+    value = edge.weight * (target_activation - expected) ** 2
+    return EdgeTension(
+        edge_index=edge_index,
+        source=edge.source,
+        target=edge.target,
+        relation=edge.relation,
+        value=float(value),
+    )
 
 
 def detect_tension(graph: Graph) -> TensionReport:
     """Detect unresolved constraint error across edges.
 
-    TODO: Generalize tension beyond explicit expected target activation.
+    Uses tau_ij = weight * (a_j - expected_ratio * polarity * a_i)^2.
     """
-    edge_tensions = [edge_tension(graph, edge_id) for edge_id in graph.edges]
+    edge_tensions = [edge_tension(graph, edge_index) for edge_index, _ in enumerate(graph.edges)]
     total = sum(item.value for item in edge_tensions)
     return TensionReport(edge_tensions=edge_tensions, total=float(total))
-
