@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from cig.graph import Graph
-from cig.tension import TensionReport, detect_tension
+from cig.tension import TensionReport, detect_tension, tension_report
 
 
 class CIGEngine:
@@ -55,17 +55,23 @@ class CIGEngine:
 
         initial_activations = self._activation_snapshot()
         self.activate_inputs(input_node_ids)
+        tension_before_report = tension_report(self.graph)
 
         for _ in range(steps):
             self.propagate_step()
             self.activate_inputs(input_node_ids)
 
         final_activations = self._activation_snapshot()
+        tension_after_report = tension_report(self.graph)
         return {
             "input_nodes": list(input_node_ids),
             "initial_activations": initial_activations,
             "final_activations": final_activations,
             "top_activated_nodes": self._top_activated_nodes(),
+            "tension_before": tension_before_report["total"],
+            "tension_after": tension_after_report["total"],
+            "top_tension_edges_before": tension_before_report["top_edges"],
+            "top_tension_edges_after": tension_after_report["top_edges"],
             "steps": steps,
         }
 

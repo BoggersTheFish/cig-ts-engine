@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from cig.edge import Edge
 from cig.graph import Graph
 
 
@@ -19,30 +20,63 @@ class TensionReport(BaseModel):
 
     @property
     def coherence(self) -> float:
-        """Simple placeholder coherence score in [0, 1]."""
+        """Simple coherence score in [0, 1] derived from total tension."""
         return 1.0 / (1.0 + self.total)
 
 
-def edge_tension(graph: Graph, edge_index: int) -> EdgeTension:
-    edge = graph.edge(edge_index)
-    source_activation = graph.node(edge.source).activation
-    target_activation = graph.node(edge.target).activation
-    expected = edge.expected_ratio * source_activation * edge.polarity
-    value = edge.weight * (target_activation - expected) ** 2
-    return EdgeTension(
-        edge_index=edge_index,
-        source=edge.source,
-        target=edge.target,
-        relation=edge.relation,
-        value=float(value),
-    )
+def edge_tension(graph: Graph, edge: Edge) -> float:
+    """Return tau_ij = weight * (a_j - expected_ratio * a_i)^2."""
+    source_activation = graph.get_node(edge.source).activation
+    target_activation = graph.get_node(edge.target).activation
+    expected = edge.expected_ratio * source_activation
+    return float(edge.weight * (target_activation - expected) ** 2)
+
+
+def total_tension(graph: Graph) -> float:
+    return float(sum(edge_tension(graph, edge) for edge in graph.edges))
+
+
+def tension_report(graph: Graph, top_k: int = 10) -> dict:
+    if top_k < 0:
+        raise ValueError("top_k must be non-negative")
+
+    edge_reports = []
+    for index, edge in enumerate(graph.edges):
+        source_activation = graph.get_node(edge.source).activation
+        target_activation = graph.get_node(edge.target).activation
+        expected = edge.expected_ratio * source_activation
+        edge_reports.append(
+            {
+                "edge_index": index,
+                "source": edge.source,
+                "target": edge.target,
+                "relation": edge.relation,
+                "weight": edge.weight,
+                "expected_ratio": edge.expected_ratio,
+                "source_activation": source_activation,
+                "target_activation": target_activation,
+                "expected_target_activation": expected,
+                "tension": edge_tension(graph, edge),
+            }
+        )
+
+    edge_reports.sort(key=lambda item: (-item["tension"], item["edge_index"]))
+    return {
+        "total": total_tension(graph),
+        "top_edges": edge_reports[:top_k],
+    }
 
 
 def detect_tension(graph: Graph) -> TensionReport:
-    """Detect unresolved constraint error across edges.
-
-    Uses tau_ij = weight * (a_j - expected_ratio * polarity * a_i)^2.
-    """
-    edge_tensions = [edge_tension(graph, edge_index) for edge_index, _ in enumerate(graph.edges)]
-    total = sum(item.value for item in edge_tensions)
-    return TensionReport(edge_tensions=edge_tensions, total=float(total))
+    """Compatibility wrapper returning the older Pydantic report shape."""
+    edge_tensions = [
+        EdgeTension(
+            edge_index=index,
+            source=edge.source,
+            target=edge.target,
+            relation=edge.relation,
+            value=edge_tension(graph, edge),
+        )
+        for index, edge in enumerate(graph.edges)
+    ]
+    return TensionReport(edge_tensions=edge_tensions, total=total_tension(graph))
