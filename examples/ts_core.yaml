@@ -251,6 +251,22 @@ edges:
     expected_ratio: 0.4
     metadata:
       note: "Religion can also enable social control."
+  - source: religion
+    target: trauma
+    relation: can_trigger
+    weight: 0.05
+    polarity: 1.0
+    expected_ratio: 0.35
+    metadata:
+      note: "Religion can activate trauma associations in harm contexts."
+  - source: religion
+    target: tension
+    relation: can_raise
+    weight: 0.05
+    polarity: 1.0
+    expected_ratio: 0.45
+    metadata:
+      note: "Religion can raise tension in harm contexts."
   - source: trauma
     target: tension
     relation: increases
