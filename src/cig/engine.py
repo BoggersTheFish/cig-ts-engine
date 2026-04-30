@@ -20,6 +20,7 @@ class CIGEngine:
         self.decay = decay
         self.activation_rate = activation_rate
         self.clamp = clamp
+        self._source_amounts: dict[str, float] = {}
 
     def activate_inputs(self, input_node_ids: list[str], amount: float = 1.0) -> None:
         for node_id in input_node_ids:
@@ -32,7 +33,7 @@ class CIGEngine:
         """
         incoming = {node_id: 0.0 for node_id in self.graph.nodes}
         for edge in self.graph.edges:
-            source_activation = self.graph.get_node(edge.source).activation
+            source_activation = self._source_activation(edge.source)
             incoming[edge.target] += (
                 source_activation
                 * edge.weight
@@ -49,20 +50,30 @@ class CIGEngine:
         for node in self.graph.nodes.values():
             node.activation = self._clamp(node.activation * self.decay)
 
-    def run_cycle(self, input_node_ids: list[str], steps: int = 5) -> dict:
+    def run_cycle(
+        self,
+        input_node_ids: list[str],
+        steps: int = 5,
+        input_amounts: dict[str, float] | None = None,
+        hold_inputs: bool = True,
+    ) -> dict:
         if steps < 0:
             raise ValueError("steps must be non-negative")
 
         initial_activations = self._activation_snapshot()
-        self.activate_inputs(input_node_ids)
+        self._set_cycle_inputs(input_node_ids, input_amounts)
         tension_before_report = tension_report(self.graph)
 
         for _ in range(steps):
             self.propagate_step()
-            self.activate_inputs(input_node_ids)
+            if hold_inputs:
+                self._set_cycle_inputs(input_node_ids, input_amounts)
+            else:
+                self._source_amounts = {}
 
         final_activations = self._activation_snapshot()
         tension_after_report = tension_report(self.graph)
+        self._source_amounts = {}
         return {
             "input_nodes": list(input_node_ids),
             "initial_activations": initial_activations,
@@ -122,6 +133,20 @@ class CIGEngine:
         if not self.clamp:
             return float(value)
         return float(np.clip(value, 0.0, 1.0))
+
+    def _set_cycle_inputs(
+        self,
+        input_node_ids: list[str],
+        input_amounts: dict[str, float] | None,
+    ) -> None:
+        self._source_amounts = {}
+        for node_id in input_node_ids:
+            amount = 1.0 if input_amounts is None else input_amounts.get(node_id, 1.0)
+            self.graph.set_activation(node_id, self._clamp(amount))
+            self._source_amounts[node_id] = float(amount)
+
+    def _source_activation(self, node_id: str) -> float:
+        return self._source_amounts.get(node_id, self.graph.get_node(node_id).activation)
 
 
 class ThinkingSystemEngine(CIGEngine):
