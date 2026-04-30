@@ -185,3 +185,7 @@ interpreter for your environment, for example `python3` or a virtualenv path.
 - Current propagation and relaxation rules are deliberately simple.
 - The demos show inspectable graph mechanics, not a general theory of human
   meaning.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
