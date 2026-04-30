@@ -66,3 +66,17 @@ def test_cli_evolve_command() -> None:
     assert "context split suggestion:" in result.stdout
     assert "religion_comfort" in result.stdout
     assert "religion_harm" in result.stdout
+
+
+def test_cli_visualize_command(tmp_path) -> None:
+    output_path = tmp_path / "graph.png"
+
+    result = runner.invoke(
+        app,
+        ["visualize", GRAPH_PATH, "--output", str(output_path)],
+    )
+
+    assert result.exit_code == 0
+    assert "wrote:" in result.stdout
+    assert output_path.exists()
+    assert output_path.stat().st_size > 0

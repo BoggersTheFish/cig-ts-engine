@@ -10,6 +10,7 @@ from cig.evolve import find_overloaded_nodes, suggest_context_split
 from cig.io import load_graph
 from cig.meaning import derivative_meaning
 from cig.tension import tension_report
+from cig.visualize import plot_graph
 
 app = typer.Typer(help="CIG/TS graph runtime CLI.")
 
@@ -136,6 +137,17 @@ def evolve(
             f"{item['suggested_new_source']} -> {item['target']}"
         )
     typer.echo(f"- explanation: {suggestion['explanation']}")
+
+
+@app.command()
+def visualize(
+    graph_path: Annotated[Path, typer.Argument(help="Path to a CIG YAML graph.")],
+    output: Annotated[Path, typer.Option("--output", help="Output image path.")],
+) -> None:
+    """Render a PNG visualization of a graph."""
+    graph = load_graph(graph_path)
+    plot_graph(graph, output, title=f"CIG Graph: {graph_path.name}")
+    typer.echo(f"wrote: {output}")
 
 
 def _print_activation_rows(rows: list[dict], limit: int = 10) -> None:
