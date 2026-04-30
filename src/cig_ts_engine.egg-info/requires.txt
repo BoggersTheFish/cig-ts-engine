@@ -1,0 +1,8 @@
+numpy
+pydantic
+pyyaml
+typer
+matplotlib
+
+[dev]
+pytest

@@ -1,0 +1,44 @@
+nodes:
+  - id: forty_seven
+    label: "47"
+    kind: symbol
+    activation: 1.0
+    context: arithmetic
+  - id: prime
+    label: Prime
+    kind: concept
+    activation: 0.0
+    context: arithmetic
+  - id: religion
+    label: Religion
+    kind: concept
+    activation: 0.4
+    context: culture
+  - id: ritual
+    label: Ritual
+    kind: concept
+    activation: 0.1
+    context: culture
+  - id: contradiction
+    label: Contradiction
+    kind: state
+    activation: 0.8
+    context: logic
+edges:
+  - id: forty_seven_to_prime
+    source: forty_seven
+    target: prime
+    relation: implies
+    weight: 0.9
+  - id: religion_to_ritual
+    source: religion
+    target: ritual
+    relation: evokes
+    weight: 0.5
+  - id: contradiction_constraint
+    source: contradiction
+    target: prime
+    relation: constraint
+    weight: 1.0
+    expected_target_activation: 0.2
+

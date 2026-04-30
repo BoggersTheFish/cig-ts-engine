@@ -1,0 +1,66 @@
+Metadata-Version: 2.4
+Name: cig-ts-engine
+Version: 0.1.0
+Summary: Deterministic Concept/Constraint Intelligence Graph and Thinking System engine skeleton.
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: numpy
+Requires-Dist: pydantic
+Requires-Dist: pyyaml
+Requires-Dist: typer
+Requires-Dist: matplotlib
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+
+# CIG/TS Engine
+
+A deterministic skeleton for a CIG/TS engine.
+
+CIG means Concept/Constraint Intelligence Graph. TS means Thinking System.
+The reasoning core is an explicit graph of nodes, weighted constraints, active
+state, unresolved tension, and graph evolution hooks.
+
+## TS Primitives
+
+- Node: concept, claim, symbol, memory, or state.
+- Edge: weighted relation or constraint between nodes.
+- Activation: current signal strength on a node.
+- Tension: unresolved constraint error on an edge.
+- Coherence: low-tension graph stability.
+- Attractor: stable graph state.
+- Meaning: derivative of graph state with respect to idea input.
+- Break/Evolve: graph restructuring when unresolved tension justifies added
+  complexity.
+
+## Core Cycle
+
+```text
+Propagate -> Relax -> Detect Tension -> Break/Evolve
+```
+
+## Install
+
+```bash
+python -m pip install -e ".[dev]"
+```
+
+## Run Tests
+
+```bash
+pytest
+```
+
+## Examples
+
+```bash
+python examples/run_47_demo.py
+python examples/run_religion_derivative_demo.py
+python examples/run_context_split_demo.py
+```
+
+## CLI
+
+```bash
+cig-ts inspect examples/ts_core.yaml
+```
+
