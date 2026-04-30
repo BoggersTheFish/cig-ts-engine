@@ -246,7 +246,7 @@ edges:
   - source: religion
     target: control
     relation: can_enable
-    weight: 0.45
+    weight: 0.85
     polarity: 1.0
     expected_ratio: 0.4
     metadata:
@@ -254,7 +254,7 @@ edges:
   - source: trauma
     target: tension
     relation: increases
-    weight: 0.95
+    weight: 0.1
     polarity: 1.0
     expected_ratio: 0.9
     metadata:
@@ -262,7 +262,7 @@ edges:
   - source: control
     target: tension
     relation: increases
-    weight: 0.65
+    weight: 0.85
     polarity: 1.0
     expected_ratio: 0.6
     metadata:
@@ -331,3 +331,83 @@ edges:
     expected_ratio: 0.8
     metadata:
       note: "Lower R supports the minimum-R compressor objective."
+  - source: religion
+    target: community
+    relation: can_build
+    weight: 0.75
+    polarity: 1.0
+    expected_ratio: 0.65
+    metadata:
+      note: "Religion can build community in comfort-oriented contexts."
+  - source: comfort
+    target: stable_attractor
+    relation: stabilizes
+    weight: 0.55
+    polarity: 1.0
+    expected_ratio: 0.6
+    metadata:
+      note: "Comfort can help stabilize attractor states."
+  - source: comfort
+    target: relaxation
+    relation: supports
+    weight: 0.55
+    polarity: 1.0
+    expected_ratio: 0.55
+    metadata:
+      note: "Comfort supports relaxation."
+  - source: relaxation
+    target: coherence
+    relation: supports
+    weight: 0.5
+    polarity: 1.0
+    expected_ratio: 0.55
+    metadata:
+      note: "Relaxation can support low-tension coherence."
+  - source: community
+    target: comfort
+    relation: supports
+    weight: 0.35
+    polarity: 1.0
+    expected_ratio: 0.45
+    metadata:
+      note: "Community can reinforce comfort."
+  - source: comfort
+    target: control
+    relation: softens
+    weight: 1.0
+    polarity: -1.0
+    expected_ratio: 0.3
+    metadata:
+      note: "Comfort context softens the control path."
+  - source: comfort
+    target: tension
+    relation: relaxes
+    weight: 0.8
+    polarity: -1.0
+    expected_ratio: 0.3
+    metadata:
+      note: "Comfort context relaxes tension."
+  - source: trauma
+    target: comfort
+    relation: disrupts
+    weight: 1.3
+    polarity: -1.0
+    expected_ratio: 0.3
+    metadata:
+      note: "Trauma context disrupts comfort response."
+  - source: trauma
+    target: ritual
+    relation: disrupts
+    weight: 1.0
+    polarity: -1.0
+    expected_ratio: 0.3
+    metadata:
+      note: "Trauma context disrupts ritual response."
+  - source: trauma
+    target: community
+    relation: isolates
+    weight: 1.0
+    polarity: -1.0
+    expected_ratio: 0.3
+    metadata:
+      note: "Trauma context can isolate community response."

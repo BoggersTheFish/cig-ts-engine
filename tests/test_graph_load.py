@@ -7,7 +7,7 @@ def test_load_graph_from_yaml() -> None:
     graph = load_graph(Path("examples/ts_core.yaml"))
 
     assert len(graph.nodes) == 27
-    assert len(graph.edges) == 21
+    assert len(graph.edges) == 31
     assert graph.get_node("meaning").label == "Meaning"
     assert graph.get_node("meaning").metadata["type"] == "concept"
 
