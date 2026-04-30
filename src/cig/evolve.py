@@ -3,10 +3,14 @@ from __future__ import annotations
 from collections import defaultdict
 from copy import deepcopy
 
+from cig.compression import representational_radius
 from cig.edge import Edge
 from cig.graph import CIGraph, Graph
 from cig.node import Node
-from cig.tension import TensionReport, edge_tension
+from cig.tension import TensionReport, edge_tension, total_tension
+
+
+DEFAULT_SPLIT_PRIMITIVE_COST = 0.5
 
 
 def find_overloaded_nodes(graph: Graph, top_k: int = 5) -> list[dict]:
@@ -70,6 +74,8 @@ def suggest_context_split(
     graph: Graph,
     node_id: str,
     split_names: list[str],
+    alpha: float = 1.0,
+    beta: float = 0.01,
 ) -> dict:
     """Return a non-mutating context split proposal for an overloaded node."""
     if node_id not in graph.nodes:
@@ -84,6 +90,8 @@ def suggest_context_split(
             "label": _split_label(original.label, split_name),
             "metadata": {
                 **original.metadata,
+                "primitive": True,
+                "primitive_cost": DEFAULT_SPLIT_PRIMITIVE_COST,
                 "split_from": node_id,
                 "split_role": split_name,
             },
@@ -113,6 +121,14 @@ def suggest_context_split(
         for edge in incoming
     ]
 
+    mapping = {
+        item["target"]: item["suggested_new_source"]
+        for item in edges_to_redirect
+    }
+    proposed = apply_context_split(graph, node_id, mapping)
+    delta_r = representational_radius(proposed, beta=beta) - representational_radius(graph, beta=beta)
+    tension_reduction = total_tension(graph) - total_tension(proposed)
+
     return {
         "original_node": {
             "id": original.id,
@@ -122,7 +138,11 @@ def suggest_context_split(
         "new_nodes": new_nodes,
         "edges_to_redirect": edges_to_redirect,
         "edges_to_copy": edges_to_copy,
-        "expected_complexity_increase_delta_R": float(len(split_names)),
+        "delta_R": float(delta_r),
+        "expected_complexity_increase_delta_R": float(delta_r),
+        "tension_reduction": float(tension_reduction),
+        "alpha": float(alpha),
+        "accepted": bool(tension_reduction > alpha * delta_r),
         "explanation": (
             f"Split {node_id} into {', '.join(split_names)} so outgoing "
             "constraints can be assigned to context-specific source states."
@@ -159,6 +179,8 @@ def apply_context_split(
                     stability=original.stability,
                     metadata={
                         **deepcopy(original.metadata),
+                        "primitive": True,
+                        "primitive_cost": DEFAULT_SPLIT_PRIMITIVE_COST,
                         "split_from": node_id,
                     },
                 )

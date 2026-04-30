@@ -40,7 +40,10 @@ def test_find_overloaded_religion_node_and_suggest_split() -> None:
         "religion_comfort",
         "religion_harm",
     ]
-    assert suggestion["expected_complexity_increase_delta_R"] == 2.0
+    assert suggestion["delta_R"] > 0.0
+    assert suggestion["expected_complexity_increase_delta_R"] == suggestion["delta_R"]
+    assert "tension_reduction" in suggestion
+    assert "accepted" in suggestion
     redirected = {
         item["target"]: item["suggested_new_source"]
         for item in suggestion["edges_to_redirect"]

@@ -127,9 +127,10 @@ def evolve(
         "- new nodes: "
         + ", ".join(item["id"] for item in suggestion["new_nodes"])
     )
-    typer.echo(
-        f"- delta_R: {suggestion['expected_complexity_increase_delta_R']:.1f}"
-    )
+    typer.echo(f"- delta_R: {suggestion['delta_R']:.6f}")
+    typer.echo(f"- tension reduction: {suggestion['tension_reduction']:.6f}")
+    typer.echo(f"- alpha: {suggestion['alpha']:.6f}")
+    typer.echo(f"- accepted: {suggestion['accepted']}")
     typer.echo("- redirects:")
     for item in suggestion["edges_to_redirect"]:
         typer.echo(
