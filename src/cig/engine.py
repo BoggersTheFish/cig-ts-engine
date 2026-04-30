@@ -6,47 +6,76 @@ from cig.graph import Graph
 from cig.tension import TensionReport, detect_tension
 
 
-class ThinkingSystemEngine:
-    """Deterministic Propagate -> Relax -> Detect Tension -> Evolve loop."""
+class CIGEngine:
+    """Deterministic TS cycle engine over an explicit CIGraph."""
 
     def __init__(
         self,
         graph: Graph,
-        propagation_rate: float = 1.0,
-        relaxation_rate: float = 0.05,
+        decay: float = 0.85,
+        activation_rate: float = 0.35,
+        clamp: bool = True,
     ) -> None:
         self.graph = graph
-        self.propagation_rate = propagation_rate
-        self.relaxation_rate = relaxation_rate
+        self.decay = decay
+        self.activation_rate = activation_rate
+        self.clamp = clamp
 
-    def propagate(self) -> None:
-        """Apply one deterministic weighted activation propagation pass.
+    def activate_inputs(self, input_node_ids: list[str], amount: float = 1.0) -> None:
+        for node_id in input_node_ids:
+            self.graph.set_activation(node_id, self._clamp(amount))
 
-        TODO: Replace this placeholder with a richer propagation model that
-        handles signed constraints, normalization, and attractor search.
+    def propagate_step(self) -> None:
+        """Run one deterministic propagation update.
+
+        a_next = decay * a + activation_rate * incoming
         """
-        deltas = {node_id: 0.0 for node_id in self.graph.nodes}
+        incoming = {node_id: 0.0 for node_id in self.graph.nodes}
         for edge in self.graph.edges:
-            source_activation = self.graph.node(edge.source).activation
-            deltas[edge.target] += (
+            source_activation = self.graph.get_node(edge.source).activation
+            incoming[edge.target] += (
                 source_activation
                 * edge.weight
                 * edge.polarity
-                * self.propagation_rate
+                * self.activation_rate
             )
 
-        for node_id, delta in deltas.items():
-            node = self.graph.node(node_id)
-            node.activation = float(np.clip(node.activation + delta, 0.0, 1.0))
+        for node_id, node in self.graph.nodes.items():
+            next_activation = self.decay * node.activation + incoming[node_id]
+            node.activation = self._clamp(next_activation)
+
+    def relax_step(self) -> None:
+        """Decay all activations deterministically."""
+        for node in self.graph.nodes.values():
+            node.activation = self._clamp(node.activation * self.decay)
+
+    def run_cycle(self, input_node_ids: list[str], steps: int = 5) -> dict:
+        if steps < 0:
+            raise ValueError("steps must be non-negative")
+
+        initial_activations = self._activation_snapshot()
+        self.activate_inputs(input_node_ids)
+
+        for _ in range(steps):
+            self.propagate_step()
+            self.activate_inputs(input_node_ids)
+
+        final_activations = self._activation_snapshot()
+        return {
+            "input_nodes": list(input_node_ids),
+            "initial_activations": initial_activations,
+            "final_activations": final_activations,
+            "top_activated_nodes": self._top_activated_nodes(),
+            "steps": steps,
+        }
+
+    def propagate(self) -> None:
+        """Compatibility alias for older placeholder engine API."""
+        self.propagate_step()
 
     def relax(self) -> None:
-        """Decay activation slightly toward zero.
-
-        TODO: Relaxation should eventually optimize toward low-tension graph
-        stability rather than simple activation decay.
-        """
-        for node in self.graph.nodes.values():
-            node.activation = float(np.clip(node.activation * (1.0 - self.relaxation_rate), 0.0, 1.0))
+        """Compatibility alias for older placeholder engine API."""
+        self.relax_step()
 
     def detect_tension(self) -> TensionReport:
         return detect_tension(self.graph)
@@ -58,8 +87,49 @@ class ThinkingSystemEngine:
         _ = report
 
     def step(self) -> TensionReport:
-        self.propagate()
-        self.relax()
+        self.propagate_step()
         report = self.detect_tension()
         self.evolve(report)
         return report
+
+    def _activation_snapshot(self) -> dict[str, float]:
+        return {
+            node_id: node.activation
+            for node_id, node in self.graph.nodes.items()
+        }
+
+    def _top_activated_nodes(self) -> list[dict[str, float | str]]:
+        return [
+            {
+                "id": node_id,
+                "label": node.label,
+                "activation": node.activation,
+            }
+            for node_id, node in sorted(
+                self.graph.nodes.items(),
+                key=lambda item: (-item[1].activation, item[0]),
+            )
+            if node.activation > 0.0
+        ]
+
+    def _clamp(self, value: float) -> float:
+        if not self.clamp:
+            return float(value)
+        return float(np.clip(value, 0.0, 1.0))
+
+
+class ThinkingSystemEngine(CIGEngine):
+    """Compatibility wrapper for the initial skeleton API."""
+
+    def __init__(
+        self,
+        graph: Graph,
+        propagation_rate: float = 1.0,
+        relaxation_rate: float = 0.05,
+    ) -> None:
+        super().__init__(
+            graph=graph,
+            decay=1.0 - relaxation_rate,
+            activation_rate=propagation_rate,
+            clamp=True,
+        )
