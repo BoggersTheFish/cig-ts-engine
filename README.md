@@ -1,4 +1,16 @@
-# CIG/TS Engine
+# cig-ts-engine
+
+**Status:** active experimental prototype.
+
+**Role in the TS stack:** Compact CIG/TS engine for claim/evidence graph dynamics, confidence, contradiction tracking, and inspectable knowledge state.
+
+**What this repo is:** A local-first Python runtime for deterministic Concept/Constraint Intelligence Graph experiments with explicit graph state and TS-style tension cycles.
+
+**What this repo is not:** Not a production knowledge base or finished autonomous reasoner.
+
+**Start here:** install the editable package, run tests, then inspect the CIG/TS cycle examples below.
+
+## CIG/TS Engine
 
 A local-first Python runtime for experimenting with a deterministic
 Concept/Constraint Intelligence Graph (CIG) and Thinking System (TS).
