@@ -2,6 +2,8 @@
 
 **Status:** active experimental prototype.
 
+**Canonical route:** [TS-Start-Here](https://github.com/BoggersTheFish/TS-Start-Here) -> [TS-Reasoner-v0](https://github.com/BoggersTheFish/TS-Reasoner-v0) -> [TensionLM](https://github.com/BoggersTheFish/TensionLM) -> TS-Codex-OS / TS-Core / CIG.
+
 **Role in the TS stack:** Compact CIG/TS engine for claim/evidence graph dynamics, confidence, contradiction tracking, and inspectable knowledge state.
 
 **What this repo is:** A local-first Python runtime for deterministic Concept/Constraint Intelligence Graph experiments with explicit graph state and TS-style tension cycles.
